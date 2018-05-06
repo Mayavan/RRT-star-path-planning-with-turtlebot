@@ -1,0 +1,1 @@
+imtool('map.pgm')
