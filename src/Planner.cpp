@@ -1,11 +1,13 @@
-#include "project3/Planner.hpp"
+#include "project5/Planner.hpp"
+
+#define DEBUG false
 
 Planner::Planner(Map_manager manager)
 {
   Cfree = manager.getCfree();
 
-  branch_length = 1;
-  region_radius = 1.3;
+  branch_length = 4;
+  region_radius = 6;
 
   map = manager;
 }
@@ -13,10 +15,16 @@ Planner::Planner(Map_manager manager)
 // Return a random point from the Cspace
 std::vector<float> Planner::get_random_point()
 {
-  int random = randNum(0, Cfree.size());
+  //int random = randNum(0, Cfree.size());
   std::vector<float> floatVec;
-  floatVec.push_back(Cfree[random][0]);
-  floatVec.push_back(Cfree[random][1]);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  
+  std::uniform_real_distribution<> x(0, 384);
+  std::uniform_real_distribution<> y(0, 384);
+  floatVec.push_back(x(gen));
+  floatVec.push_back(y(gen));
+
   return floatVec;
 }
 
@@ -183,13 +191,12 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   Tree twig;
   twig.node = root;
   twig.costToCome = 0;
+  tree.push_back(twig);
 
   std::vector<int> floaterVec;
   floaterVec.push_back(floor(target[0])); 
   floaterVec.push_back(floor(target[1])); 
   std::cout<<"target obstacle :"<<map.checkObstacle(floaterVec)<< std::endl;
-
-  tree.push_back(twig);
 
   distance_to_target = branch_length + 20;
 
@@ -204,15 +211,18 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   while ((distance_to_target > branch_length) || hasObstacle(target, Xnew) || count<10000)
   {
     count++;
-    std::cout << "-- Current Count :" << count << "    -- distance to target :"<< distance_to_target<< "    -- Has Obstacle :"<< hasObstacle(target, Xnew) <<std::endl;
+    std::cout << "-- Current Count :" << count << "    -- distance to target :" << distance_to_target<< "    -- Has Obstacle :"<< hasObstacle(target, Xnew) <<std::endl;
 
     Xrand = get_random_point();
+    
     Xnearest = find_nearest(Xrand);
     if(Xnearest[0]==Xrand[0] || Xnearest[1]==Xrand[1])
       continue;
     Xnew = new_node(Xnearest, Xrand);
+    std::cout << "New point is ["<<Xnew[0]<< ", "<<Xnew[1]<< "] "<< std::endl;
     neighbourhood = get_neighbourhood(Xnew);
     parent = get_best_parent(neighbourhood);
+    Xnear.clear();
     Xnear.push_back(parent[0]);
     Xnear.push_back(parent[1]);
     position = parent[2];
@@ -228,6 +238,17 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
     if (!hasObstacle(point1, point2))
     {
       long current_no_of_nodes = tree.size();
+      
+      if(DEBUG)
+      {
+        std::cout << "Printing nodes...\n";
+        for (int cc = 0; cc < tree.size(); cc++)
+        { 
+          std::cout << "["<<tree[cc].node[0]<< ", "<<tree[cc].node[1]<< "] "<< std::endl;
+        }
+        std::cout << "Press any key to continue...\n";
+        getchar();
+      }
 
       // Add new node
       Tree temp;
@@ -254,8 +275,7 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
         }
       }
     }
-    //std::cout << "Press any key to continue...\n";
-    //getchar();
+    
   }// end of search loop
 
   // Adding the target Node to the tree

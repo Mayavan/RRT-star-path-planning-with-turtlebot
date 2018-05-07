@@ -1,4 +1,4 @@
-#include "project3/Map_manager.hpp"
+#include "project5/Map_manager.hpp"
 
 using namespace cv;
 
@@ -34,7 +34,7 @@ int Map_manager::get_state(int x, int y){
 
 // Check if the particular grid has obstacle
 bool Map_manager::checkObstacle(std::vector<int> grid){
-  if (get_state(grid[0],grid[1])==0)
+  if (get_state(grid[0], grid[1])==0)
     return true;
   else
     return false;
@@ -62,3 +62,4 @@ void Map_manager::show_image(){
   imshow( "Display window", image ); 
   waitKey(60000);
 }
+

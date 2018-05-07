@@ -1,6 +1,7 @@
-#include "project3/Map_manager.hpp"
-#include "project3/Planner.hpp"
-#include "project3/matplotlibcpp.h"
+#include "project5/Map_manager.hpp"
+#include "project5/Planner.hpp"
+#include "project5/matplotlibcpp.h"
+#include "project5/controller.hpp"
 
 #include <ros/ros.h>
 #include <iostream>
@@ -34,7 +35,7 @@ int main(int argc, char **argv)
   start_state.push_back(0);
   start_state.push_back(0);
 
-  end_state.push_back(2);
+  end_state.push_back(2.0);
   end_state.push_back(0);
   end_state.push_back(0);
 
@@ -47,9 +48,28 @@ int main(int argc, char **argv)
     cout << "End Point: " << target_point[0] << ", " << target_point[1] << endl;
   }
 
+  // Make the plan with RRT
   std::vector<geometry_msgs::PoseStamped> plan;
   plan = planner.makePlan(start_point, target_point);
   
+
+  int counter = 0;
+  // Plot the map
+  for(int i=0;i<384;i++)
+    for(int j=0;j<384;j++)
+      if(manager.get_state(i,j)>150)
+      {
+        vector<double> x,y;
+        x.push_back((i*0.05) - 10);
+        x.push_back((i*0.05) - 10+0.01);
+        y.push_back((j*0.05) - 10);
+        y.push_back((j*0.05) - 10+0.01);
+        plt::plot(x, y);
+        cout<<"Printing"<<counter++<<endl;
+      }      
+  
+
+  // Plot the plan
   vector<double> x,y;
   for(int i=plan.size()-1; i >= 0; i--)
   {
