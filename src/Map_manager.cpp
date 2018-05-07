@@ -9,12 +9,12 @@ Map_manager::Map_manager(){
   {
     std::cout<< "No Data " <<  std::endl;
   }
-  
+
   std::vector<int> point;
   // create Cfree space to produce random nodes
   for(int i=0;i<384;i++)
     for(int j=0;j<384;j++)
-      if(Map_manager::get_state(i,j)==1)
+      if(Map_manager::get_state(i,j)>150)
       {
         point.push_back(i);
         point.push_back(j);
@@ -23,7 +23,7 @@ Map_manager::Map_manager(){
 }
 
 // returns the Cspace
-std::vector<std::vector<int> > getCfree(){
+std::vector<std::vector<int> > Map_manager::getCfree(){
   return Cfree;
 }
 
@@ -41,15 +41,15 @@ bool Map_manager::checkObstacle(std::vector<int> grid){
 }
 
 // get position in meter and return in pixel coordinates in image
-std::vector<int> Map_manager::computeGridCoordinate(std::vector<float> position){
-  std::vector<int> grid;
+std::vector<float> Map_manager::computeGridCoordinate(std::vector<float> position){
+  std::vector<float> grid;
   grid.push_back(floor((position[0]+10)*20));
   grid.push_back(floor((position[1]+10)*20));
   return grid;
 }
 
 // get position in pixel coordinates and return in meter in image
-std::vector<double> Map_manager::computeDistanceCoordinate(std::vector<int> position){
+std::vector<double> Map_manager::computeDistanceCoordinate(std::vector<float> position){
   std::vector<double> distance;
   distance.push_back((position[0]*0.05) - 10);
   distance.push_back((position[1]*0.05) - 10);

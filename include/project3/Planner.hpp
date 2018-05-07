@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <geometry_msgs/PoseStamped.h>
 
 #include "project3/Map_manager.hpp"
 
@@ -13,7 +14,7 @@ class Planner
 {
 public:
   Planner(std::vector<std::vector<int> > Cf, Map_manager manager);
-  std::vector<geometry_msgs::PoseStamped> makePlan(std::vector<int> start, std::vector<int> goal);
+  std::vector<geometry_msgs::PoseStamped> makePlan(std::vector<float> root, std::vector<float> target);
   float calculateDistance(std::vector<float> first_point, std::vector<float> second_point);
 
 private:
@@ -24,17 +25,19 @@ private:
     std::vector<int> branches;
   };
   std::vector<std::vector<int> > Cfree;
-  const int region_radius;
-  const int branch_length;
-  int distance_to_target;
+  int region_radius;
+  int branch_length;
+  float distance_to_target;
   std::vector<Tree> tree;
+  Map_manager map;
 
-  std::vector<int> get_random_point();
-  std::vector<float> find_nearest(std::vector<int> Xrand);
+  std::vector<float> get_random_point();
+  std::vector<float> find_nearest(std::vector<float> Xrand);
   bool hasObstacle(std::vector<float> Xnear, std::vector<float> Xnew);
-  std::vector<float> new_node(std::vector<float> Xnear, std::vector<int> Xrand);
+  std::vector<float> new_node(std::vector<float> Xnear, std::vector<float> Xrand);
   std::vector<int> get_neighbourhood(std::vector<float> Xnew);
   std::vector<float> get_best_parent(std::vector<int> neighbourhood);
+  long findParent(long position_of_child);
 
   int randNum(int min, int max);
 };
