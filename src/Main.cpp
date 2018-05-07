@@ -24,18 +24,18 @@ int main(int argc, char **argv)
 
   // Initialization
   Map_manager manager;
-  Planner planner(manager.getCfree(), manager);
+  Planner planner(manager);
 
   // Initialized position corresponds to the spawn position in gazebo environment
   vector<float> start_state, end_state;
   vector<float> start_point, target_point;
 
   start_state.push_back(-2.0);
-  start_state.push_back(-0.5);
+  start_state.push_back(0);
   start_state.push_back(0);
 
+  end_state.push_back(2);
   end_state.push_back(0);
-  end_state.push_back(-0.5);
   end_state.push_back(0);
 
   target_point = manager.computeGridCoordinate(end_state);
@@ -57,6 +57,8 @@ int main(int argc, char **argv)
     y.push_back(plan[i].pose.position.y);
   }
   plt::plot(x, y);
+  plt::xlim(-10, 10);
+  plt::ylim(-10, 10);
   plt::show();
   
 

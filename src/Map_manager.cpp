@@ -9,13 +9,13 @@ Map_manager::Map_manager(){
   {
     std::cout<< "No Data " <<  std::endl;
   }
-
-  std::vector<int> point;
+  
   // create Cfree space to produce random nodes
   for(int i=0;i<384;i++)
     for(int j=0;j<384;j++)
       if(Map_manager::get_state(i,j)>150)
       {
+        std::vector<int> point;
         point.push_back(i);
         point.push_back(j);
         Cfree.push_back(point);
@@ -29,7 +29,7 @@ std::vector<std::vector<int> > Map_manager::getCfree(){
 
 // returns the color at the given coordinate
 int Map_manager::get_state(int x, int y){	
-	return (int)image.at<uchar>(y,x);
+	return (int)image.at<uchar>((384-y),x);
 }
 
 // Check if the particular grid has obstacle
@@ -60,5 +60,5 @@ std::vector<double> Map_manager::computeDistanceCoordinate(std::vector<float> po
 void Map_manager::show_image(){
   namedWindow( "Display window", WINDOW_AUTOSIZE ); // Create a window for display.
   imshow( "Display window", image ); 
-  waitKey(10000);
+  waitKey(60000);
 }

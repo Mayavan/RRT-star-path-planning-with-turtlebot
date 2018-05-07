@@ -13,7 +13,7 @@
 class Planner
 {
 public:
-  Planner(std::vector<std::vector<int> > Cf, Map_manager manager);
+  Planner(Map_manager manager);
   std::vector<geometry_msgs::PoseStamped> makePlan(std::vector<float> root, std::vector<float> target);
   float calculateDistance(std::vector<float> first_point, std::vector<float> second_point);
 

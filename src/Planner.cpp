@@ -1,11 +1,11 @@
 #include "project3/Planner.hpp"
 
-Planner::Planner(std::vector<std::vector<int> > Cf, Map_manager manager)
+Planner::Planner(Map_manager manager)
 {
-  Cfree = Cf;
+  Cfree = manager.getCfree();
 
-  branch_length = 5;
-  region_radius = 8;
+  branch_length = 1;
+  region_radius = 1.3;
 
   map = manager;
 }
@@ -14,7 +14,9 @@ Planner::Planner(std::vector<std::vector<int> > Cf, Map_manager manager)
 std::vector<float> Planner::get_random_point()
 {
   int random = randNum(0, Cfree.size());
-  std::vector<float> floatVec(Cfree[random].begin(), Cfree[random].end());
+  std::vector<float> floatVec;
+  floatVec.push_back(Cfree[random][0]);
+  floatVec.push_back(Cfree[random][1]);
   return floatVec;
 }
 
@@ -27,8 +29,6 @@ bool Planner::hasObstacle(std::vector<float> Xnear, std::vector<float> Xnew)
 
   int decimated_index;
   float diff;
-
-  std::vector<float> point;
 
   // take the greater difference
   if (fabs(diff1) > fabs(diff2))
@@ -48,6 +48,7 @@ bool Planner::hasObstacle(std::vector<float> Xnear, std::vector<float> Xnew)
 
   for (int ii = 1; ii <= fabs(diff); ii++)
   {
+    std::vector<float> point;
     point.push_back(Xnear[0] + ii * diff1 / fabs(diff));
     point.push_back(Xnear[1] + ii * diff2 / fabs(diff));
 
@@ -68,7 +69,9 @@ bool Planner::hasObstacle(std::vector<float> Xnear, std::vector<float> Xnew)
     floatVec.push_back(floor(points_to_check[jj][0])); 
     floatVec.push_back(floor(points_to_check[jj][1])); 
     if (map.checkObstacle(floatVec))
+    {
       result = true;
+    }
   }
 
   return result;
@@ -181,9 +184,14 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   twig.node = root;
   twig.costToCome = 0;
 
+  std::vector<int> floaterVec;
+  floaterVec.push_back(floor(target[0])); 
+  floaterVec.push_back(floor(target[1])); 
+  std::cout<<"target obstacle :"<<map.checkObstacle(floaterVec)<< std::endl;
+
   tree.push_back(twig);
 
-  distance_to_target = branch_length + 1;
+  distance_to_target = branch_length + 20;
 
   int count = 0;
 
@@ -191,17 +199,18 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   std::vector<float> Xnew, Xnear, Xnearest, Xrand, parent;
   int position;
 
+  Xnew = root;
   std::cout << "------------- Starting Search ------------- " << std::endl;
-  while ((distance_to_target > branch_length) || hasObstacle(target, Xnew) || count < 2000)
+  while ((distance_to_target > branch_length) || hasObstacle(target, Xnew) || count<10000)
   {
     count++;
-    std::cout << "-- Current Count :" << count << "    -- distance to target :"<< distance_to_target <<std::endl;
+    std::cout << "-- Current Count :" << count << "    -- distance to target :"<< distance_to_target<< "    -- Has Obstacle :"<< hasObstacle(target, Xnew) <<std::endl;
 
     Xrand = get_random_point();
     Xnearest = find_nearest(Xrand);
+    if(Xnearest[0]==Xrand[0] || Xnearest[1]==Xrand[1])
+      continue;
     Xnew = new_node(Xnearest, Xrand);
-    //if (sum(isnan(Xnew)))
-    //  continue end
     neighbourhood = get_neighbourhood(Xnew);
     parent = get_best_parent(neighbourhood);
     Xnear.push_back(parent[0]);
@@ -218,7 +227,6 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
 
     if (!hasObstacle(point1, point2))
     {
-      std::cout<<"Inside has obstat";
       long current_no_of_nodes = tree.size();
 
       // Add new node
@@ -246,7 +254,9 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
         }
       }
     }
-  }
+    //std::cout << "Press any key to continue...\n";
+    //getchar();
+  }// end of search loop
 
   // Adding the target Node to the tree
   long current_no_of_nodes = tree.size();
@@ -261,19 +271,21 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   // Add child location in parent node
   tree[current_no_of_nodes-1].branches.push_back(current_no_of_nodes);
 
+  std::cout << "------------- Search Optimal Path ------------- " << std::endl;
   // Track the optimal path
   long node_number = current_no_of_nodes;
   std::vector<float> current_node = target;
   std::vector<geometry_msgs::PoseStamped> plan;
-  int pos = 0;
   while (root[0] != current_node[0] || root[1] != current_node[1])
   {
-    plan[pos].pose.position.x = ((current_node[0]*0.05) - 10);
-    plan[pos].pose.position.y = ((current_node[1]*0.05) - 10);
+    geometry_msgs::PoseStamped pos;
+    pos.pose.position.x = ((current_node[0]*0.05) - 10);
+    pos.pose.position.y = ((current_node[1]*0.05) - 10);
+
+    plan.push_back(pos);
 
     node_number = findParent(node_number);
     current_node = tree[node_number].node;
-    pos++;
   }
 
   return plan;
