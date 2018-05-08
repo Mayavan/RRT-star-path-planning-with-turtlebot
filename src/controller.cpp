@@ -1,45 +1,64 @@
 #include "project5/controller.hpp"
 
-controller::controller(){}
+controller::controller(ros::NodeHandle node, int step_size)
+{
+	pub = node.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 10);
+	feedback = node.subscribe("/move_base/feedback", 1000, &controller::updater, this);
+	distance_threshold = (step_size * 0.05)/1.2;
+}
 
-bool controller::moveToGoal(geometry_msgs::PoseStamped point){
+void controller::updater(const move_base_msgs::MoveBaseActionFeedback &msg)
+{
+	current_x = msg.feedback.base_position.pose.position.x;
+	current_y = msg.feedback.base_position.pose.position.y;
+}
 
-	//define a client for to send goal requests to the move_base server through a SimpleActionClient
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
+void controller::moveToGoal(geometry_msgs::PoseStamped point)
+{
+	ROS_INFO_STREAM("Point to move to [" << point.pose.position.x << ", " << point.pose.position.y << "]\n");
+	point.header.frame_id = "map";
+	point.header.stamp = ros::Time::now();
 
-	//wait for the action server to come up
-	while(!ac.waitForServer(ros::Duration(5.0))){
-		ROS_INFO("Waiting for the move_base action server to come up");
+	pub.publish(point);
+	ros::spinOnce();
+}
+
+bool controller::executePlan(std::vector<geometry_msgs::PoseStamped> plan, float final_yaw)
+{
+	int len = plan.size() - 1;
+	ROS_INFO_STREAM("----------------Executing The Plan---------------");
+
+	for (int i = len; i >= 0; i--)
+	{
+		float x1, y1, x2, y2, slope, rad;
+		if (i == 0)
+			rad = final_yaw;
+		else
+		{
+			x1 = plan[i].pose.position.x;
+			y1 = plan[i].pose.position.y;
+			x2 = plan[i - 1].pose.position.x;
+			y2 = plan[i - 1].pose.position.y;
+
+			if (x2 == x1)
+				rad = (y2 > y1) ? 1.5708 : -1.5708;
+			else
+			{
+				slope = (y2 - y1) / (x2 - x1);
+				rad = atan(slope);
+			}
+		}
+
+		plan[i].pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, rad);
+		moveToGoal(plan[i]);
+
+		// Wait for completion
+		float distance;
+		do
+		{
+			distance = (float)sqrt((double)pow(x1 - current_x, 2) + (double)pow(y1 - current_y, 2));
+			ros::spinOnce();
+		} while (distance_threshold < distance);
 	}
-
-	move_base_msgs::MoveBaseGoal goal;
-
-	//set up the frame parameters
-	goal.target_pose.header.frame_id = "map";
-	goal.target_pose.header.stamp = ros::Time::now();
-
-	/* moving towards the goal*/
-
-	goal.target_pose.pose.position.x =  xGoal;
-	goal.target_pose.pose.position.y =  yGoal;
-	goal.target_pose.pose.position.z =  0.0;
-	goal.target_pose.pose.orientation.x = 0.0;
-	goal.target_pose.pose.orientation.y = 0.0;
-	goal.target_pose.pose.orientation.z = 0.0;
-	goal.target_pose.pose.orientation.w = 1.0;
-
-	ROS_INFO("Sending goal location ...");
-	ac.sendGoal(goal);
-
-	ac.waitForResult();
-
-	if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-		ROS_INFO("You have reached the destination");
-		return true;
-	}
-	else{
-		ROS_INFO("The robot failed to reach the destination");
-		return false;
-	}
-
+	return true;
 }

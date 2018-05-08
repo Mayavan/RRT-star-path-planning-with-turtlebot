@@ -11,7 +11,8 @@
 
 #include <cmath>
 
-#define DEBUG true
+#define DEBUG false
+#define STEP_SIZE 6
 
 namespace plt = matplotlibcpp;
 using namespace std;
@@ -25,7 +26,8 @@ int main(int argc, char **argv)
 
   // Initialization
   Map_manager manager;
-  Planner planner(manager);
+  Planner planner(manager, STEP_SIZE);
+  controller control(node, STEP_SIZE);
 
   // Initialized position corresponds to the spawn position in gazebo environment
   vector<float> start_state, end_state;
@@ -33,11 +35,12 @@ int main(int argc, char **argv)
 
   start_state.push_back(-2.0);
   start_state.push_back(0);
-  start_state.push_back(0);
 
   end_state.push_back(2.0);
   end_state.push_back(0);
   end_state.push_back(0);
+
+  float final_yaw = end_state[2];
 
   target_point = manager.computeGridCoordinate(end_state);
   start_point = manager.computeGridCoordinate(start_state);
@@ -54,6 +57,8 @@ int main(int argc, char **argv)
   
 
   int counter = 0;
+
+  ROS_INFO_STREAM("Plotting MAP with Global Plan");
   // Plot the map
   for(int i=0;i<384;i++)
     for(int j=0;j<384;j++)
@@ -65,7 +70,7 @@ int main(int argc, char **argv)
         y.push_back((j*0.05) - 10);
         y.push_back((j*0.05) - 10+0.01);
         plt::plot(x, y);
-        cout<<"Printing"<<counter++<<endl;
+        if (DEBUG) cout<<"Printing"<<counter++<<endl;
       }      
   
 
@@ -81,6 +86,7 @@ int main(int argc, char **argv)
   plt::ylim(-10, 10);
   plt::show();
   
+  control.executePlan(plan, final_yaw);
 
   return 0;
 }

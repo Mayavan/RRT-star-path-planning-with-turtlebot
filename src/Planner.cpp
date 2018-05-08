@@ -2,12 +2,12 @@
 
 #define DEBUG false
 
-Planner::Planner(Map_manager manager)
+Planner::Planner(Map_manager manager, int step_size)
 {
   Cfree = manager.getCfree();
 
-  branch_length = 4;
-  region_radius = 6;
+  branch_length = step_size;
+  region_radius = step_size*3/2;
 
   map = manager;
 }
@@ -188,6 +188,8 @@ float Planner::calculateDistance(std::vector<float> first_point, std::vector<flo
 
 std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> root, std::vector<float> target)
 {
+  std::vector<geometry_msgs::PoseStamped> plan;
+  
   Tree twig;
   twig.node = root;
   twig.costToCome = 0;
@@ -196,7 +198,12 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   std::vector<int> floaterVec;
   floaterVec.push_back(floor(target[0])); 
   floaterVec.push_back(floor(target[1])); 
-  std::cout<<"target obstacle :"<<map.checkObstacle(floaterVec)<< std::endl;
+
+  if(map.checkObstacle(floaterVec))
+  {
+    std::cout<<"Target in obstacle"<< std::endl;
+    return plan;
+  }
 
   distance_to_target = branch_length + 20;
 
@@ -211,7 +218,8 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   while ((distance_to_target > branch_length) || hasObstacle(target, Xnew) || count<10000)
   {
     count++;
-    std::cout << "-- Current Count :" << count << "    -- distance to target :" << distance_to_target<< "    -- Has Obstacle :"<< hasObstacle(target, Xnew) <<std::endl;
+
+    if(DEBUG) std::cout << "-- Current Count :" << count << "    -- distance to target :" << distance_to_target<< "    -- Has Obstacle :"<< hasObstacle(target, Xnew) <<std::endl;
 
     Xrand = get_random_point();
     
@@ -219,7 +227,6 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
     if(Xnearest[0]==Xrand[0] || Xnearest[1]==Xrand[1])
       continue;
     Xnew = new_node(Xnearest, Xrand);
-    std::cout << "New point is ["<<Xnew[0]<< ", "<<Xnew[1]<< "] "<< std::endl;
     neighbourhood = get_neighbourhood(Xnew);
     parent = get_best_parent(neighbourhood);
     Xnear.clear();
@@ -295,7 +302,7 @@ std::vector<geometry_msgs::PoseStamped> Planner::makePlan(std::vector<float> roo
   // Track the optimal path
   long node_number = current_no_of_nodes;
   std::vector<float> current_node = target;
-  std::vector<geometry_msgs::PoseStamped> plan;
+  
   while (root[0] != current_node[0] || root[1] != current_node[1])
   {
     geometry_msgs::PoseStamped pos;

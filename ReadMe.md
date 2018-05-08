@@ -78,6 +78,9 @@ roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/may
 
 rosrun rviz rviz -d `rospack find turtlebot3_navigation`/rviz/turtlebot3_nav.rviz
 
+6) Localize
+
+roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 
 
 

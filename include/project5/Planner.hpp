@@ -13,7 +13,7 @@
 class Planner
 {
 public:
-  Planner(Map_manager manager);
+  Planner(Map_manager manager, int step_size);
   std::vector<geometry_msgs::PoseStamped> makePlan(std::vector<float> root, std::vector<float> target);
   float calculateDistance(std::vector<float> first_point, std::vector<float> second_point);
 
@@ -25,7 +25,7 @@ private:
     std::vector<int> branches;
   };
   std::vector<std::vector<int> > Cfree;
-  int region_radius;
+  float region_radius;
   int branch_length;
   float distance_to_target;
   std::vector<Tree> tree;
