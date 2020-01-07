@@ -3,7 +3,29 @@
 using namespace cv;
 
 Map_manager::Map_manager(){
-  image = imread( "/home/mayavan/planning_ws/src/project5/maps/point_map.png", cv::IMREAD_GRAYSCALE );
+  image = imread( "/home/mayavan/catkin_ws/src/rrt_star_path_planning_turtlebot/maps/point_map.png", cv::IMREAD_GRAYSCALE );
+
+  if ( !image.data )
+  {
+    std::cout<< "No Data" <<  std::endl;
+  }
+  
+  // create Cfree space to produce random nodes
+  for(int i=0;i<384;i++)
+    for(int j=0;j<384;j++)
+      if(Map_manager::get_state(i,j)>150)
+      {
+        std::vector<int> point;
+        point.push_back(i);
+        point.push_back(j);
+        Cfree.push_back(point);
+      }      
+}
+
+Map_manager::Map_manager(std::string map_location){
+  std::cout<< "Map Location: " << map_location <<  std::endl;
+  
+  image = imread(map_location, cv::IMREAD_GRAYSCALE );
 
   if ( !image.data )
   {

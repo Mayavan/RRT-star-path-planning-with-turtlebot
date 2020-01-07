@@ -6,6 +6,7 @@
 
 class Map_manager {
  public:
+  Map_manager(std::string map_location);
   Map_manager();
   int get_state(int x, int y);
   void show_image();

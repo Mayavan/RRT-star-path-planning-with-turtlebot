@@ -1,7 +1,7 @@
 
 # RRT* implementation on turtlebot3
 
-RRT* on Project 2 is done in Matlab
+RRT* is implemented in Matlab and with ROS + turtlebot simulation
 
 Project 5 is done in ROS and Gazebo with C++
 
@@ -25,40 +25,44 @@ Project 5 is done in ROS and Gazebo with C++
 
 # To run the code
 
-## RRT* ON PROJECT 2 
+## RRT* ON MATLAB
 
- * Run main.m file in RRT* on project 2 folder.
+ * Run main.m file in RRT* on MATLAB code folder.
 
 ## RRT* ON Turtlebot3 
-1. Follow this link on guide to SLAM the workspace first:
 
-http://emanual.robotis.com/docs/en/platform/turtlebot3/slam/
+1. Install dependent ros packages for turtle bot
+    http://emanual.robotis.com/docs/en/platform/turtlebot3/pc_setup/#install-dependent-ros-packages
 
-2. Start master:
+2. Follow this link on guide to SLAM the workspace first:
+
+    http://emanual.robotis.com/docs/en/platform/turtlebot3/slam/
+
+3. Create a costmap and name it point_map.png file
+
+4. Load model variable
 ```
-$ roscore
+export TURTLEBOT3_MODEL=waffle
 ```
 
-3. Launch simulation or the robot. To run with simulation,
+5. Launch simulation or the robot. To run with simulation,
 ```
-$ roslaunch turtlebot3_gazebo turtlebot3_world.launch 
+$ roslaunch turtlebot3_gazebo turtlebot3_world.launch x_pos:=-2 y_pos:=0.5
 ```
+
 To run with turtlebot3 bringup the robot.
 
-4. Start navigation package
+6. Start navigation package
 ```
-$ roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/mayavan/planning_ws/src/project5/maps/map.yaml
-```
-5.  Start Rviz for visulization
-```
-$ rosrun rviz rviz -d `rospack find turtlebot3_navigation`/rviz/turtlebot3_nav.rviz
-```
-6.  Localize with 2D pose estimate
-
-7. Run the planner after setting the start and end point in the code and catkin_make.
-```
-$ rosrun package_name Main
+$ roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/location_of_project/maps/map.yaml
 ```
 
+You should see the robot sensor data miss aligned with the actual map like below.
+![Rviz.png](Rviz.png "Rviz")
 
+7. Indicate Location of robot on map with 2D pose estimate in Rviz.
 
+8. Run the planner after setting the start and end point in the code and catkin_make.
+```
+$ rosrun rrt_star_path_planning_turtlebot rrt_demo map_file:=/location_of_project/maps/point_map
+```

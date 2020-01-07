@@ -18,14 +18,19 @@ namespace plt = matplotlibcpp;
 using namespace std;
 
 
-int main(int argc, char **argv)
+int main(int argc, char  *argv[])
 {
-  ros::init(argc, argv, "project5_node");
+  ros::init(argc, argv, "rrt_demo");
 
-  ros::NodeHandle node;
+  ros::NodeHandle node("~");
+
+  std::string map_location;
+  node.getParam("map_file", map_location);
+
+  std::cout << map_location << ".png" << std::endl;
 
   // Initialization
-  Map_manager manager;
+  Map_manager manager(std::string(map_location+".png"));
   Planner planner(manager, STEP_SIZE);
   controller control(node, STEP_SIZE);
 
@@ -33,11 +38,11 @@ int main(int argc, char **argv)
   vector<float> start_state, end_state;
   vector<float> start_point, target_point;
 
-  start_state.push_back(-2.0);
-  start_state.push_back(0);
+  start_state.push_back(-0.5);
+  start_state.push_back(-2);
 
+  end_state.push_back(0.5);
   end_state.push_back(2.0);
-  end_state.push_back(0);
   end_state.push_back(0);
 
   float final_yaw = end_state[2];
