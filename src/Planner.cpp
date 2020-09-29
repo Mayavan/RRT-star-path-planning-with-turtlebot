@@ -3,13 +3,12 @@
 #define DEBUG false
 
 Planner::Planner(Map_manager manager, int step_size)
+:map(manager)
 {
   Cfree = manager.getCfree();
 
   branch_length = step_size;
   region_radius = step_size*3/2;
-
-  map = manager;
 }
 
 // Return a random point from the Cspace
